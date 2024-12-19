@@ -3,15 +3,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
 
 const app = express();
 
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://paromeosi.vercel.app',  // il tuo dominio Vercel
-  'https://paromeosi.it'  // il tuo dominio personalizzato
+  'https://paromeosi.vercel.app',
+  'https://paromeosi.it'
 ];
 
 app.use(cors({
@@ -28,28 +28,46 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Crea la cartella uploads se non esiste
+// Crea e verifica la cartella uploads
 const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+console.log('Checking uploads directory');
+const initUploads = async () => {
+  try {
+    await fs.mkdir(uploadsDir, { recursive: true });
+    // Test write permissions
+    const testFile = path.join(uploadsDir, 'test.txt');
+    await fs.writeFile(testFile, 'test');
+    await fs.unlink(testFile);
+    console.log('Uploads directory is ready and writable');
+  } catch (error) {
+    console.error('Error setting up uploads directory:', error);
+    process.exit(1);
+  }
+};
+initUploads();
 
 // Serve static files dalla cartella uploads
 app.use('/uploads', express.static(uploadsDir));
 
 // Routes
 const photoRoutes = require('./routes/photoRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+
 app.use('/api/photos', photoRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Base route
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to PAROMEOSI API' });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+// Global error handling middleware
+app.use((error, req, res, next) => {
+  console.error('Global error handler:', error);
+  res.status(500).json({
+    message: error.message,
+    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+  });
 });
 
 // Database connection with better error handling

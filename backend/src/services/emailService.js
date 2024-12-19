@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const fs = require('fs').promises;
 const path = require('path');
+const sharp = require('sharp');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -11,65 +12,96 @@ const transporter = nodemailer.createTransport({
 });
 
 const extractTagFromSubject = (subject) => {
-  console.log("Subject ricevuto:", subject); // Debug log
+  console.log("Processing email subject:", subject);
   const match = subject.match(/tag:\s*([^\[\]]+)/i);
   if (match) {
-    return match[1].trim().toLowerCase();
+    const tag = match[1].trim().toLowerCase();
+    console.log("Extracted tag:", tag);
+    return tag;
   }
+  console.log("No tag found in subject");
   return null;
+};
+
+const processImage = async (buffer, filename) => {
+  console.log("Processing image:", filename);
+  try {
+    const processedImage = await sharp(buffer)
+      .resize(2500, 2500, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .jpeg({ quality: 85 });
+    console.log("Image processed successfully");
+    return processedImage;
+  } catch (error) {
+    console.error("Error processing image:", error);
+    throw error;
+  }
 };
 
 const saveAttachment = async (attachment) => {
   try {
+    console.log("Saving attachment:", attachment.filename);
     const timestamp = Date.now();
     const uniqueSuffix = Math.round(Math.random() * 1E9);
     const extension = path.extname(attachment.filename) || '.jpg';
     const filename = `photo-${timestamp}-${uniqueSuffix}${extension}`;
     const filepath = path.join(__dirname, '../../uploads', filename);
 
-    // Assicurati che la directory uploads esista
+    // Ensure uploads directory exists
     const uploadsDir = path.join(__dirname, '../../uploads');
     await fs.mkdir(uploadsDir, { recursive: true });
+    console.log("Uploads directory confirmed");
 
-    // Salva il file
-    await fs.writeFile(filepath, attachment.content);
-    console.log(`File salvato: ${filename}`); // Debug log
+    // Process and save image
+    const processedImage = await processImage(attachment.content, filename);
+    await processedImage.toFile(filepath);
+    console.log("File saved successfully to:", filepath);
+
     return `/uploads/${filename}`;
   } catch (error) {
-    console.error('Errore nel salvare l\'allegato:', error);
+    console.error("Error saving attachment:", error);
     throw error;
   }
 };
 
 exports.processIncomingEmail = async (parsedMail) => {
   try {
-    console.log("Processing email subject:", parsedMail.subject); // Debug log
+    console.log("Processing new email:", parsedMail.subject);
     const tag = extractTagFromSubject(parsedMail.subject);
 
     if (!tag) {
-      console.log('Tag non trovato nel subject:', parsedMail.subject);
+      console.log('No tag found, skipping email');
       return null;
     }
-
-    console.log("Tag estratto:", tag); // Debug log
 
     if (!parsedMail.attachments || parsedMail.attachments.length === 0) {
-      console.log('Nessun allegato trovato');
+      console.log('No attachments found');
       return null;
     }
 
+    console.log(`Processing ${parsedMail.attachments.length} attachments`);
     const results = [];
+    
     for (const attachment of parsedMail.attachments) {
       if (attachment.contentType.startsWith('image/')) {
-        const url = await saveAttachment(attachment);
-        results.push({ url, tag });
+        console.log(`Processing image attachment: ${attachment.filename}`);
+        try {
+          const url = await saveAttachment(attachment);
+          console.log("Image saved successfully:", url);
+          results.push({ url, tag });
+        } catch (err) {
+          console.error(`Error processing attachment ${attachment.filename}:`, err);
+        }
+      } else {
+        console.log(`Skipping non-image attachment: ${attachment.filename}`);
       }
     }
 
-    console.log(`Processate ${results.length} foto`); // Debug log
     return results;
   } catch (error) {
-    console.error('Errore nel processare email:', error);
+    console.error('Error in processIncomingEmail:', error);
     throw error;
   }
 };

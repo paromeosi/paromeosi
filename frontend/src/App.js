@@ -6,6 +6,7 @@ import theme from './styles/theme';
 import Header from './components/Header';
 import Gallery from './pages/Gallery';
 import About from './pages/About';
+import AdminUpload from './pages/AdminUpload';
 import { getTags } from './services/api';
 
 function App() {
@@ -28,7 +29,6 @@ function App() {
     // Polling ogni 30 secondi per aggiornare i tag
     const interval = setInterval(fetchTags, 30000);
 
-    // Cleanup interval on unmount
     return () => clearInterval(interval);
   }, []);
 
@@ -44,6 +44,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Gallery activeTag={activeTag} />} />
           <Route path="/about" element={<About />} />
+          <Route path="/caricala" element={<AdminUpload />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

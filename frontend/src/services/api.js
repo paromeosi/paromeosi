@@ -4,7 +4,9 @@ const API_URL = process.env.NODE_ENV === 'production'
 
 export const getPhotos = async () => {
   try {
-    const response = await fetch(`${API_URL}/photos`);
+    const response = await fetch(`${API_URL}/photos`, {
+      credentials: 'include'
+    });
     if (!response.ok) throw new Error('Network response was not ok');
     return await response.json();
   } catch (error) {
@@ -15,7 +17,9 @@ export const getPhotos = async () => {
 
 export const getPhotosByTag = async (tag) => {
   try {
-    const response = await fetch(`${API_URL}/photos/tag/${tag}`);
+    const response = await fetch(`${API_URL}/photos/tag/${tag}`, {
+      credentials: 'include'
+    });
     if (!response.ok) throw new Error('Network response was not ok');
     return await response.json();
   } catch (error) {
@@ -26,7 +30,9 @@ export const getPhotosByTag = async (tag) => {
 
 export const getTags = async () => {
   try {
-    const response = await fetch(`${API_URL}/photos/tags`);
+    const response = await fetch(`${API_URL}/photos/tags`, {
+      credentials: 'include'
+    });
     if (!response.ok) throw new Error('Network response was not ok');
     return await response.json();
   } catch (error) {
@@ -35,19 +41,22 @@ export const getTags = async () => {
   }
 };
 
-export const submitPhoto = async (formData) => {
+export const adminUploadPhoto = async (formData) => {
   try {
-    const response = await fetch(`${API_URL}/email/submit`, {
+    const response = await fetch(`${API_URL}/admin/upload`, {
       method: 'POST',
-      body: formData
+      body: formData,
+      credentials: 'include'
     });
+    
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Upload failed');
     }
+    
     return await response.json();
   } catch (error) {
-    console.error('Error submitting photo:', error);
+    console.error('Error uploading photo:', error);
     throw error;
   }
 };

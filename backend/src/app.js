@@ -7,10 +7,13 @@ const fs = require('fs').promises;
 
 const app = express();
 
-// CORS configuration semplificata per il debug
-app.use(cors());
+// CORS configuration semplificata
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-// Il resto delle configurazioni
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -1,3 +1,8 @@
+const Photo = require('../models/Photo');
+const path = require('path');  // Aggiungiamo questo import
+const sharp = require('sharp');
+const fs = require('fs').promises;
+
 exports.uploadPhoto = async (req, res) => {
   try {
     console.log('Upload request received');

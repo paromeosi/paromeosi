@@ -96,17 +96,21 @@ const LazyImage = ({ src, alt, onClick }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
 
+  const fullImageUrl = `${process.env.NODE_ENV === 'production' 
+    ? 'https://paromeosi-backend.onrender.com' 
+    : 'http://localhost:5001'}${src}`;
+
   return (
     <>
       {!isLoaded && !error && <Placeholder />}
       <PhotoImg
-        src={`http://localhost:5001${src}`}
+        src={fullImageUrl}
         alt={alt}
         isLoaded={isLoaded}
         onLoad={() => setIsLoaded(true)}
         onError={() => {
           setError(true);
-          console.error('Error loading image:', src);
+          console.error('Error loading image:', fullImageUrl);
         }}
         onClick={onClick}
         loading="lazy"
@@ -182,7 +186,9 @@ const Gallery = ({ activeTag }) => {
             Chiudi
           </CloseButton>
           <ModalImage 
-            src={`http://localhost:5001${selectedPhoto.url}`}
+            src={`${process.env.NODE_ENV === 'production' 
+              ? 'https://paromeosi-backend.onrender.com' 
+              : 'http://localhost:5001'}${selectedPhoto.url}`}
             alt={selectedPhoto.tag}
             onClick={(e) => e.stopPropagation()}
           />

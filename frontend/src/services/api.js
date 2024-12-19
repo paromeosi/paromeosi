@@ -1,5 +1,5 @@
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? '/api'
+const API_URL = process.env.NODE_ENV === 'production'
+  ? 'https://paromeosi-backend.onrender.com/api'
   : 'http://localhost:5001/api';
 
 export const getPhotos = async () => {

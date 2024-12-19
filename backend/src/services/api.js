@@ -1,8 +1,12 @@
-const API_URL = 'http://localhost:5001/api';
+const API_URL = process.env.NODE_ENV === 'production'
+  ? 'https://paromeosi-backend.onrender.com/api'
+  : 'http://localhost:5001/api';
 
 export const getPhotos = async () => {
   try {
-    const response = await fetch(`${API_URL}/photos`);
+    const response = await fetch(`${API_URL}/photos`, {
+      credentials: 'include'
+    });
     if (!response.ok) throw new Error('Network response was not ok');
     return await response.json();
   } catch (error) {
@@ -13,7 +17,9 @@ export const getPhotos = async () => {
 
 export const getPhotosByTag = async (tag) => {
   try {
-    const response = await fetch(`${API_URL}/photos/tag/${tag}`);
+    const response = await fetch(`${API_URL}/photos/tag/${tag}`, {
+      credentials: 'include'
+    });
     if (!response.ok) throw new Error('Network response was not ok');
     return await response.json();
   } catch (error) {
@@ -24,7 +30,9 @@ export const getPhotosByTag = async (tag) => {
 
 export const getTags = async () => {
   try {
-    const response = await fetch(`${API_URL}/photos/tags`);
+    const response = await fetch(`${API_URL}/photos/tags`, {
+      credentials: 'include'
+    });
     if (!response.ok) throw new Error('Network response was not ok');
     return await response.json();
   } catch (error) {
@@ -37,7 +45,8 @@ export const submitPhoto = async (formData) => {
   try {
     const response = await fetch(`${API_URL}/email/submit`, {
       method: 'POST',
-      body: formData
+      body: formData,
+      credentials: 'include'
     });
     if (!response.ok) {
       const errorData = await response.json();

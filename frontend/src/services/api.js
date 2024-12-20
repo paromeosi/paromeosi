@@ -35,6 +35,19 @@ export const getTags = async () => {
   }
 };
 
+export const deletePhoto = async (photoId) => {
+  try {
+    const response = await fetch(`${API_URL}/photos/${photoId}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Network response was not ok');
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting photo:', error);
+    throw error;
+  }
+};
+
 export const adminUploadPhoto = async (formData) => {
   try {
     const response = await fetch(`${API_URL}/admin/upload`, {

@@ -6,7 +6,9 @@ import theme from './styles/theme';
 import Header from './components/Header';
 import Gallery from './pages/Gallery';
 import About from './pages/About';
+import AdminPanel from './pages/AdminPanel';
 import AdminUpload from './pages/AdminUpload';
+import AdminManage from './pages/AdminManage';
 import { getTags } from './services/api';
 
 function App() {
@@ -23,12 +25,8 @@ function App() {
       }
     };
 
-    // Fetch iniziale
     fetchTags();
-
-    // Polling ogni 30 secondi per aggiornare i tag
     const interval = setInterval(fetchTags, 30000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -44,7 +42,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Gallery activeTag={activeTag} />} />
           <Route path="/about" element={<About />} />
-          <Route path="/caricala" element={<AdminUpload />} />
+          <Route path="/segreta" element={<AdminPanel />} />
+          <Route path="/segreta/upload" element={<AdminUpload />} />
+          <Route path="/segreta/manage" element={<AdminManage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

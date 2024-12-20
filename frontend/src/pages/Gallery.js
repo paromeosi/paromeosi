@@ -92,25 +92,25 @@ const LoadingText = styled.div`
   font-weight: 300;
 `;
 
-const LazyImage = ({ src, alt, onClick }) => {
+const LazyImage = ({ photo, onClick }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
 
-  const fullImageUrl = `${process.env.NODE_ENV === 'production' 
+  const imageUrl = `${process.env.NODE_ENV === 'production' 
     ? 'https://paromeosi-backend.onrender.com' 
-    : 'http://localhost:5001'}${src}`;
+    : 'http://localhost:5001'}${isLoaded ? photo.url : photo.thumbnailUrl}`;
 
   return (
     <>
       {!isLoaded && !error && <Placeholder />}
       <PhotoImg
-        src={fullImageUrl}
-        alt={alt}
+        src={imageUrl}
+        alt={photo.tag}
         isLoaded={isLoaded}
         onLoad={() => setIsLoaded(true)}
         onError={() => {
           setError(true);
-          console.error('Error loading image:', fullImageUrl);
+          console.error('Error loading image:', imageUrl);
         }}
         onClick={onClick}
         loading="lazy"
@@ -172,8 +172,7 @@ const Gallery = ({ activeTag }) => {
         {photos.map((photo) => (
           <PhotoItem key={photo._id}>
             <LazyImage
-              src={photo.url}
-              alt={photo.tag}
+              photo={photo}
               onClick={() => setSelectedPhoto(photo)}
             />
           </PhotoItem>

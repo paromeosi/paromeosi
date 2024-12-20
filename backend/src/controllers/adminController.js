@@ -1,5 +1,5 @@
 const Photo = require('../models/Photo');
-const path = require('path');  // Aggiungiamo questo import
+const path = require('path');
 const sharp = require('sharp');
 const fs = require('fs').promises;
 
@@ -20,27 +20,41 @@ exports.uploadPhoto = async (req, res) => {
     }
     console.log('Tag:', tag);
 
-    // Genera nome file unico
-    const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
-    const filepath = path.join(__dirname, '../../uploads', filename);
-    console.log('File will be saved as:', filename);
+    // Genera nomi file unici
+    const baseFilename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const fullImageFilename = `${baseFilename}.jpg`;
+    const thumbnailFilename = `${baseFilename}-thumb.jpg`;
+    
+    const fullImagePath = path.join(__dirname, '../../uploads', fullImageFilename);
+    const thumbnailPath = path.join(__dirname, '../../uploads', thumbnailFilename);
 
     try {
+      // Salva versione grande
       await sharp(req.file.buffer)
         .resize(2500, 2500, {
           fit: 'inside',
           withoutEnlargement: true
         })
         .jpeg({ quality: 85 })
-        .toFile(filepath);
-      console.log('Image processed and saved');
+        .toFile(fullImagePath);
+
+      // Salva thumbnail
+      await sharp(req.file.buffer)
+        .resize(300, 300, {
+          fit: 'cover'
+        })
+        .jpeg({ quality: 70 })
+        .toFile(thumbnailPath);
+
+      console.log('Images processed and saved');
     } catch (err) {
       console.error('Error processing image:', err);
       throw err;
     }
 
     const photo = new Photo({
-      url: `/uploads/${filename}`,
+      url: `/uploads/${fullImageFilename}`,
+      thumbnailUrl: `/uploads/${thumbnailFilename}`,
       tag: tag,
       sourceEmail: 'admin-upload',
       approved: true

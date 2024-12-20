@@ -2,11 +2,6 @@ const API_URL = process.env.NODE_ENV === 'production'
   ? 'https://paromeosi-backend.onrender.com/api'
   : 'http://localhost:5001/api';
 
-const headers = {
-  'Accept': 'application/json',
-  'Access-Control-Allow-Origin': '*'
-};
-
 export const getPhotos = async () => {
   try {
     const response = await fetch(`${API_URL}/photos`);

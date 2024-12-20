@@ -76,7 +76,7 @@ const CloseButton = styled.button`
   top: ${props => props.theme.spacing.medium};
   right: ${props => props.theme.spacing.medium};
   border: 1px solid ${props => props.theme.colors.text};
-  background: transparent;
+  background: white;
   padding: ${props => props.theme.spacing.small} ${props => props.theme.spacing.medium};
   cursor: pointer;
   transition: opacity 0.2s ease;
@@ -98,7 +98,7 @@ const LazyImage = ({ photo, onClick }) => {
 
   const imageUrl = `${process.env.NODE_ENV === 'production' 
     ? 'https://paromeosi-backend.onrender.com' 
-    : 'http://localhost:5001'}${isLoaded ? photo.url : photo.thumbnailUrl}`;
+    : 'http://localhost:5001'}${photo.url}`;
 
   return (
     <>

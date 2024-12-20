@@ -1,7 +1,7 @@
 const Imap = require('imap');
 const { simpleParser } = require('mailparser');
-const { processIncomingEmail } = require('./emailService');
-const Photo = require('../models/Photo');
+const { processIncomingEmail } = require('./services/emailService');
+const Photo = require('./models/Photo');
 
 const imapConfig = {
   user: process.env.EMAIL_USER,

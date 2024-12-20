@@ -5,19 +5,11 @@ const photoSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  thumbnailUrl: {
-    type: String,
-    required: true
-  },
   tag: {
     type: String,
     required: true,
     lowercase: true,
     trim: true
-  },
-  sourceEmail: {
-    type: String,
-    required: true
   },
   approved: {
     type: Boolean,

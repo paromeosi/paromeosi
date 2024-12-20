@@ -1,7 +1,6 @@
 const nodemailer = require('nodemailer');
-const path = require('path');
 const fs = require('fs').promises;
-const sharp = require('sharp');
+const path = require('path');
 const Photo = require('../models/Photo');
 
 const transporter = nodemailer.createTransport({
@@ -12,113 +11,37 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const extractTagFromSubject = (subject = '') => {
-  console.log("Processing email subject:", subject);
-  const match = subject.match(/tag:\s*([^\[\]]+)/i);
-  if (match) {
-    const tag = match[1].trim().toLowerCase();
-    console.log("Extracted tag:", tag);
-    return tag;
-  }
-  console.log("No tag found in subject");
-  return null;
+const saveAttachment = async (attachment, filename) => {
+  const filepath = path.join(__dirname, '../../uploads', filename);
+  await fs.writeFile(filepath, attachment.content);
+  return `/uploads/${filename}`;
 };
 
-const saveAttachment = async (attachment) => {
+exports.processIncomingEmail = async (email) => {
   try {
-    console.log("Saving attachment:", attachment.filename);
-    const baseFilename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const fullImageFilename = `${baseFilename}.jpg`;
-    const thumbnailFilename = `${baseFilename}-thumb.jpg`;
-    
-    const fullImagePath = path.join(__dirname, '../../uploads', fullImageFilename);
-    const thumbnailPath = path.join(__dirname, '../../uploads', thumbnailFilename);
-
-    // Ensure uploads directory exists
-    const uploadsDir = path.join(__dirname, '../../uploads');
-    await fs.mkdir(uploadsDir, { recursive: true });
-    console.log("Uploads directory confirmed");
-
-    // Process buffer
-    const buffer = Buffer.isBuffer(attachment.content) 
-      ? attachment.content 
-      : Buffer.from(attachment.content);
-
-    // Save full size image
-    await sharp(buffer)
-      .resize(2500, 2500, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
-      .jpeg({ quality: 85 })
-      .toFile(fullImagePath);
-
-    // Save thumbnail
-    await sharp(buffer)
-      .resize(300, 300, {
-        fit: 'cover'
-      })
-      .jpeg({ quality: 70 })
-      .toFile(thumbnailPath);
-
-    console.log("Files saved successfully");
-    return {
-      url: `/uploads/${fullImageFilename}`,
-      thumbnailUrl: `/uploads/${thumbnailFilename}`
-    };
-  } catch (error) {
-    console.error("Error saving attachment:", error);
-    throw error;
-  }
-};
-
-exports.processIncomingEmail = async (parsedMail) => {
-  try {
-    console.log("Processing new email:", parsedMail.subject);
-    const tag = extractTagFromSubject(parsedMail.subject);
+    // Estrai il tag dall'oggetto
+    const tagMatch = email.subject.match(/tag:\s*\[(.*?)\]/i);
+    const tag = tagMatch ? tagMatch[1].toLowerCase().trim() : null;
 
     if (!tag) {
-      console.log('No tag found, skipping email');
-      return null;
+      console.log('No tag found in subject:', email.subject);
+      return;
     }
 
-    if (!parsedMail.attachments || parsedMail.attachments.length === 0) {
-      console.log('No attachments found');
-      return null;
-    }
+    const attachments = email.attachments || [];
+    const savedPhotos = [];
 
-    console.log(`Processing ${parsedMail.attachments.length} attachments`);
-    const results = [];
-    
-    for (const attachment of parsedMail.attachments) {
-      if (attachment.contentType && attachment.contentType.startsWith('image/')) {
-        console.log(`Processing image attachment: ${attachment.filename}`);
-        try {
-          const { url, thumbnailUrl } = await saveAttachment(attachment);
-          
-          const photo = new Photo({
-            url,
-            thumbnailUrl,
-            tag,
-            sourceEmail: parsedMail.from.text,
-            approved: true
-          });
-          
-          await photo.save();
-          console.log("Photo saved to database:", url);
-          results.push(photo);
-          
-        } catch (err) {
-          console.error(`Error processing attachment ${attachment.filename}:`, err);
-        }
-      } else {
-        console.log(`Skipping non-image attachment: ${attachment.filename}`);
+    for (const attachment of attachments) {
+      if (attachment.contentType.startsWith('image/')) {
+        const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${path.extname(attachment.filename)}`;
+        const url = await saveAttachment(attachment, filename);
+        savedPhotos.push({ url, tag });
       }
     }
 
-    return results;
+    return savedPhotos;
   } catch (error) {
-    console.error('Error in processIncomingEmail:', error);
+    console.error('Error processing email:', error);
     throw error;
   }
 };
